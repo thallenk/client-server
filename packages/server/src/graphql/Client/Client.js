@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-express'
 import createReposiroty from '../io/Database/createRepository';
+import { ListSortmentEnum } from '../List/List';
 
 
 const clientRepository = createReposiroty('client')
@@ -20,6 +21,7 @@ export const typeDefs = gql`
     input ClientListOptions {
         take: Int 
         skip: Int
+        sort: ListSort
     }
     extend type Query {
         client(id: ID!): Client
@@ -43,11 +45,40 @@ export const resolvers = {
         clients: async(_, args) => {
             const {
                 skip =0,
-                take = 10
+                take = 10,
+                sort
 
             } = args.options || {}
 
             const clients = await clientRepository.read();
+
+            if(sort){
+                clients.sort((clientA, clientB)=>{
+                    if(!['name', 'email', 'disable'].includes(sort.sorter)){
+                        throw new Error(`Cannot sort by field "${sort.sorter}"`)
+                    }
+
+                    const fieldA = clientA[sort.sorter];
+                    const fieldB = clientB[sort.sorter];
+                    if(typeof fieldA === 'string'){
+                       if(sort.sortment === ListSortmentEnum.ASC) {
+                            return fieldA.localeCompare(fieldB)
+                        }
+                        else
+                            return fieldB.localeCompare(fieldA)
+                    }
+
+                    if(sort.sortment === ListSortmentEnum.ASC) {
+                        return Number(fieldA) - Number(fieldB)
+                    }
+                    else
+                        return Number(fieldB) - Number(fieldA)
+                    
+                    
+                })
+
+                
+            }
 
             //retornando dados cliente com o id inputado
             return  {
