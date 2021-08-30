@@ -1,0 +1,23 @@
+{
+  "name": "@dev-demands/server",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node -r esm .",
+    "dev": "nodemon -r esm ."
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esm": "^3.2.25",
+    "nodemon": "^2.0.12"
+  },
+  "dependencies": {
+    "apollo-server-express": "2.17.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "graphql": "^15.5.1"
+  }
+}

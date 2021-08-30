@@ -1,0 +1,3 @@
+packages: 
+# os arrays são dados pelo -
+  - 'packages/**'
