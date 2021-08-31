@@ -3,9 +3,11 @@ import { createHttpLink  } from 'apollo-link-http';
 import { setContext } from 'apollo-link-context';
 import { onError } from 'apollo-link-error';
 
-const loggerLink = new ApolloLink((operation, forward) => new Observable(observer => {
+const loggerLink = new ApolloLink(
+    (operation, forward) =>
+    new Observable(observer => {
     forward(operation).subscribe({
-        next: result => {
+        next: (result) => {
             console.log('Log', result)
             observer.next(result)
         },
@@ -25,7 +27,7 @@ const link = ApolloLink.from([
         }
     }),
     createHttpLink({
-        url: 'http://127.0.0.1:8000/graphql'
+        uri: 'http://127.0.0.1:8000/graphql'
     })
 ])
 
