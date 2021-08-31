@@ -17,10 +17,17 @@ export const typeDefs = gql`
         items: [Client!]!
         totalItems: Int!
     }
+    input ClientListFilter {
+        name: String
+        email: String
+        disable: Boolean
+
+    }
     #como é apenas um argumento, uso o input
     input ClientListOptions {
         take: Int 
         skip: Int
+        filter: ClientListFilter
         sort: ListSort
     }
     extend type Query {
@@ -46,12 +53,15 @@ export const resolvers = {
             const {
                 skip =0,
                 take = 10,
-                sort
+                sort,
+                filter
 
             } = args.options || {}
 
             const clients = await clientRepository.read();
 
+
+            // Adiciona logica para sort 
             if(sort){
                 clients.sort((clientA, clientB)=>{
                     if(!['name', 'email', 'disable'].includes(sort.sorter)){
@@ -80,10 +90,42 @@ export const resolvers = {
                 
             }
 
+            //Adiciona logica para filter
+
+            const filteredClients = clients.filter((client)=>{
+                if(!filter || Object.keys(filter).length.length === 0 )
+                    return true
+
+
+                return Object.entries(filter).every(([field, value])=> {
+                    if(client[field] === null || client[field] === undefined)
+                    return false
+                    if(typeof value === 'string'){
+                        //pega todos os nomes que contém a palavra/silaba entre %, por ex %ra%
+                        if(value.startsWith('%') && value.endsWith('%')){
+                            return client[field].includes(value.substr(1,value.length - 2))
+                        }
+                        //pega todo o nome que termina com a silaba por ex: %na
+                        if(value.startsWith('%')){
+                            return client[field].endsWith(value.substr(1))
+                        }
+                        //pega todo o nome que começa com a silaba por ex: %Ra
+                        if(value.endsWith('%')){
+                            return client[field].startsWith(value.substr(0, value.length -1))
+                        }
+                    
+                        return client[field] === value;
+
+                    }
+
+                    return client[field] === value;
+                })
+                
+            })
             //retornando dados cliente com o id inputado
             return  {
-                items: clients.slice(skip, skip+take),
-                totalItems: clients.length
+                items: filteredClients.slice(skip, skip+take),
+                totalItems: filteredClients.length
             }
         }
     }
