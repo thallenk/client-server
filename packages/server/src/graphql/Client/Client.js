@@ -53,7 +53,9 @@ export const typeDefs = gql`
         createClient(input: CreateClientInput!): Client!
         updateClient(input: updateClientInput!): Client!
         deleteClient(id: ID!): Client!
-        
+        enableClient(id: ID!): Client!
+        disableClient(id: ID!): Client!
+
     }
 `;
 
@@ -211,7 +213,67 @@ export const resolvers = {
             
             return client
 
-        }
+        },
+        enableClient: async (_, { id }) => {
+            const clients = await clientRepository.read();
+
+            const currentClient = clients.find((client) => client.id === id);
+
+            if(!currentClient)
+                throw new Error(`No client with this id "${id}"`)
+
+            if(!currentClient.disable)
+            throw new Error(`Client "${id}" is already enabled`)
+
+
+            // vamos utilizar a lib uuid para criação de id aleatório
+            const updatedClient = {
+                ...currentClient,
+                disable: false
+            };
+
+            const updatedClients = clients.map((client) => {
+                if (client.id === updatedClient.id)
+                    return updatedClient
+
+                return client
+            })
+
+            await clientRepository.write(updatedClients)
+
+            return updatedClient;
+        },
+        disableClient: async (_, { id }) => {
+            const clients = await clientRepository.read();
+
+            const currentClient = clients.find((client) => client.id === id);
+
+            if(!currentClient)
+                throw new Error(`No client with this id "${id}"`)
+
+            if(currentClient.disable)
+            throw new Error(`Client "${id}" is already disabled`)
+
+
+            // vamos utilizar a lib uuid para criação de id aleatório
+            const updatedClient = {
+                ...currentClient,
+                disable: true
+            };
+
+            const updatedClients = clients.map((client) => {
+                if (client.id === updatedClient.id)
+                    return updatedClient
+
+                return client
+            })
+
+            await clientRepository.write(updatedClients)
+
+            return updatedClient;
+        },
+
+
     }
 }
 
