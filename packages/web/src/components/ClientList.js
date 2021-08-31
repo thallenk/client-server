@@ -22,7 +22,7 @@ const GET_CLIENT_LIST = gql`
 
 const PAGE_SIZE = 10;
 
-export function ClientList() {
+export function ClientList({ onSelectClient }) {
 
 
     //utilizando o hook useQuery para chamar o query na home
@@ -30,7 +30,6 @@ export function ClientList() {
         data,
         error,
         loading,
-        refetch,
         fetchMore,
         called
 
@@ -45,7 +44,9 @@ export function ClientList() {
 
     //a interrogação serve para eu pegar o client apenas se tiver o data
     const clients = data?.clients.items ?? [];
-
+    
+    //Selecionando o client no frontend para alimentar o forms de atualização de client
+    const handleSelectClient = (client) => () => onSelectClient?.(client.id);
     //função para recarregar pagina
     const handleLoadMore = () => {
         fetchMore({
@@ -89,7 +90,7 @@ export function ClientList() {
         <section>
             <ul> 
                 {clients.map((client) => (
-                <li key={client.id}>
+                <li key={client.id} onClick={handleSelectClient(client)}>
                     <p>{client.name}</p>
                     <p>{client.email}</p>
                 </li>
