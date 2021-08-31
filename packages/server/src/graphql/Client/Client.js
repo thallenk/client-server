@@ -42,8 +42,18 @@ export const typeDefs = gql`
         email: String!
     }
 
+    input updateClientInput {
+        id: ID!
+        name: String!
+        email: String!
+    }
+
+
     extend type Mutation {
         createClient(input: CreateClientInput!): Client!
+        updateClient(input: updateClientInput!): Client!
+        deleteClient(id: ID!): Client!
+        
     }
 `;
 
@@ -154,6 +164,53 @@ export const resolvers = {
             await clientRepository.write([...clients, client])
 
             return client;
+        },
+
+        updateClient: async (_, { input }) => {
+            const clients = await clientRepository.read();
+
+            //encontrando o client através do input.id
+            const currentClient = clients.find((client) => client.id === input.id);
+
+            if(!currentClient)
+                throw new Error(`No client with this id "${input.id}"`)
+
+
+            // vamos utilizar a lib uuid para criação de id aleatório
+            const updatedClient = {
+                ...currentClient,
+                name: input.name,
+                email: input.email,
+                disable: false
+            };
+
+            const updatedClients = clients.map((client) => {
+                if (client.id === updatedClient.id)
+                    return updatedClient
+
+                return client
+            })
+
+            await clientRepository.write(updatedClients)
+
+            return updatedClient;
+        },
+
+        deleteClient: async (_, { id }) => {
+            const clients = await clientRepository.read();
+
+            //encontrando o client através do input.id
+            const client = clients.find((client) => client.id === id);
+
+            if(!client)
+                throw new Error(`Cannot delete client with id "${id}"`)
+
+            // "deletando" client através de um filtro 
+            const updatedClients = clients.filter(client => client.id !== id)
+                await clientRepository.write(updatedClients)
+            
+            return client
+
         }
     }
 }
