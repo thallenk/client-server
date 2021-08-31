@@ -1,4 +1,5 @@
-import { gql } from 'apollo-server-express'
+import { gql } from 'apollo-server-express';
+import * as uuid from 'uuid';
 import createReposiroty from '../io/Database/createRepository';
 import { ListSortmentEnum } from '../List/List';
 
@@ -34,6 +35,15 @@ export const typeDefs = gql`
         client(id: ID!): Client
         #inserindo paginação
         clients(options: ClientListOptions): ClientList
+    }
+
+    input CreateClientInput {
+        name: String!
+        email: String!
+    }
+
+    extend type Mutation {
+        createClient(input: CreateClientInput!): Client!
     }
 `;
 
@@ -127,6 +137,23 @@ export const resolvers = {
                 items: filteredClients.slice(skip, skip+take),
                 totalItems: filteredClients.length
             }
+        }
+    },
+
+    Mutation: {
+        createClient: async (_, { input }) => {
+            const clients = await clientRepository.read();
+            // vamos utilizar a lib uuid para criação de id aleatório
+            const client = {
+                id: uuid.v4(),
+                name: input.name,
+                email: input.email,
+                disable: false
+            };
+
+            await clientRepository.write([...clients, client])
+
+            return client;
         }
     }
 }

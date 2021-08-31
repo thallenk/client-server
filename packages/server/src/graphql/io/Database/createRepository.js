@@ -1,4 +1,4 @@
-import { readFile, watchFile} from 'fs';
+import { readFile, writeFile} from 'fs';
 import { resolve } from 'path';
 
 
@@ -20,7 +20,7 @@ function createReposiroty(name){
             })
         }),
         
-        write: (data) => new Promise(()=> {
+        write: (data) => new Promise((resolve, reject)=> {
             writeFile(path, JSON.stringify(data), (error)=>{
                 if(error){
                     reject(error);
