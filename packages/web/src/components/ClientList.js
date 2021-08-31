@@ -4,17 +4,23 @@ import { useQuery } from 'react-apollo'
 
 //fazendo o query no frontend
 const GET_CLIENT_LIST = gql`
-    query GET_CLIENT_LIST {
-        clients {
+    query GET_CLIENT_LIST($skip: Int!, $take: Int!) {
+        clients(options: {
+            skip: $skip
+            take: $take
+        }) {
             items {
                 id
                 name
                 email
             }
+            totalItems
         }
     }
 
 `;
+
+const PAGE_SIZE = 10;
 
 export function ClientList() {
 
@@ -25,15 +31,46 @@ export function ClientList() {
         error,
         loading,
         refetch,
-        fetchMore
+        fetchMore,
+        called
 
     } = useQuery(GET_CLIENT_LIST, {
-        fetchPolicy: 'cache-and-network'
+        fetchPolicy: 'cache-and-network',
+        variables: {
+            skip: 0,
+            take: PAGE_SIZE
+        },
     })
 
 
     //a interrogação serve para eu pegar o client apenas se tiver o data
     const clients = data?.clients.items ?? [];
+
+    //função para recarregar pagina
+    const handleLoadMore = () => {
+        fetchMore({
+
+            variables: {
+                skip: data.clients.items.length,
+                take: PAGE_SIZE
+            },
+
+            updateQuery: (result, { fetchMoreResult }) => {
+                if(!fetchMoreResult) return result;
+                
+                return {
+                    ...result,
+                    clients:{
+                        ...result.clients,
+                        items: result.clients.items.concat(fetchMoreResult.clients.items),
+                        totalItems: fetchMoreResult.clients.totalItems,
+                    },
+                };
+            },
+        });
+
+    };
+
 
 
     if(error)
@@ -42,7 +79,7 @@ export function ClientList() {
             <strong>Erro ao buscar os clientes</strong>
         </section>
      )
-    if(loading) 
+    if(loading && !called) 
     return(
         <section>
             <p>Carregando...</p>
@@ -59,7 +96,7 @@ export function ClientList() {
             ))}
 
             </ul>
-            <button disabled={loading}>Carregar mais</button>
+            <button type ="button" disabled={loading} onClick={handleLoadMore}>Carregar mais</button>
         </section>
     );
 }
